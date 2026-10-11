@@ -32,8 +32,7 @@ def GeneralTableExtractor(dynamicOffset, definesDict, definesDict2, outputPath, 
     
     #Load Dynamic Pointer to Table
         binary_file.seek(dynamicOffset)
-        line = binary_file.read(3)
-        TablePointer = ExtractPointer(line)
+        TablePointer = ReadTablePointer(binary_file)
         
         output.write('#include "defines.h"\n\n')
         output.write(tableType + ' ' + tableName + '[' + tableLengthName + startIndexName + '] =\n{\n')
@@ -41,6 +40,8 @@ def GeneralTableExtractor(dynamicOffset, definesDict, definesDict2, outputPath, 
         for i in range(startIndex, numEntries):
             binary_file.seek(TablePointer + ((i - startIndex) * entryLength))
             byteList = binary_file.read(entryLength)
+            if len(byteList) != entryLength:
+                raise ValueError("Truncated ROM table entry")
             
             if i in definesDict:
                 output.write('\t[' + definesDict[i] + startIndexName + '] = ')
@@ -75,8 +76,7 @@ def GeneralStructTableExtractor(dynamicOffset, definesDict, outputPath, tableTyp
     
     #Load Dynamic Pointer to Table
         binary_file.seek(dynamicOffset)
-        line = binary_file.read(3)
-        TablePointer = ExtractPointer(line)
+        TablePointer = ReadTablePointer(binary_file)
         
         output.write('#include "defines.h"\n\n')
         output.write(tableType + ' ' + tableName + '[' + tableLengthName + '] =\n{\n')
@@ -84,6 +84,8 @@ def GeneralStructTableExtractor(dynamicOffset, definesDict, outputPath, tableTyp
         for i in range(numEntries):
             binary_file.seek(TablePointer + (i * structLength))
             byteList = binary_file.read(structLength)
+            if len(byteList) != structLength:
+                raise ValueError("Truncated ROM structure entry")
             
             lenName = 0
             if i in definesDict:
@@ -142,6 +144,23 @@ def GeneralStructTableExtractor(dynamicOffset, definesDict, outputPath, tableTyp
     
     output.close()
     print("Success!")
+
+def ReadTablePointer(binary_file):
+    data = binary_file.read(4)
+    if len(data) != 4:
+        raise ValueError("Truncated ROM table pointer")
+    pointer = ExtractPointer(data)
+    if not 0x08000000 <= pointer < 0x0A000000:
+        raise ValueError("Invalid GBA ROM table pointer")
+    offset = pointer - 0x08000000
+    position = binary_file.tell()
+    binary_file.seek(0, 2)
+    size = binary_file.tell()
+    binary_file.seek(position)
+    if offset >= size:
+        raise ValueError("Table pointer outside ROM")
+    return offset
+
 
 def ExtractPointer(line):
     offset = 0

@@ -5,6 +5,7 @@ from pathlib import Path
 import os
 import itertools
 import hashlib
+import json
 import subprocess
 import sys
 from datetime import datetime
@@ -12,7 +13,7 @@ from string import StringFileConverter
 from tm_tutor import TMDataBuilder, TutorDataBuilder
 
 if sys.platform.startswith('win'):
-    PathVar = os.environ.get('Path')
+    PathVar = os.environ.get('Path', os.environ.get('PATH', ''))
     Paths = PathVar.split(';')
     PATH = ''
     for candidatePath in Paths:
@@ -109,7 +110,8 @@ def CreateOutputFile(fileName: str, newFileName: str) -> [str, bool]:
     fileExists = os.path.isfile(newFileName)
 
     # If the object file was created after the file was last modified
-    if fileExists and os.path.getmtime(newFileName) > os.path.getmtime(fileName):
+    dependencies = [fileName, 'scripts/build.py']
+    if fileExists and all(os.path.getmtime(newFileName) > os.path.getmtime(path) for path in dependencies):
         return [newFileName, False]
 
     return [newFileName, True]
@@ -158,14 +160,21 @@ def DoMiddleManAssembly(originalFile: str, assemblyFile: str, flagFile: str, fla
     fileExists = os.path.isfile(objectFile)
     flagFileExists = os.path.isfile(flagFile)
 
-    if fileExists \
-            and os.path.getmtime(objectFile) > os.path.getmtime(originalFile) \
-            and (not flagFileExists or os.path.getmtime(objectFile) > os.path.getmtime(flagFile)):
-        # If the .o file was created after the original and flag file were last modified
+    manifestFile = objectFile + '.json'
+    dependencies = [originalFile, 'scripts/build.py', cmd[0]]
+    if flagFileExists:
+        dependencies.append(flagFile)
+    manifest = {'flags': flags, 'command': cmd,
+                'files': [[path, os.stat(path).st_mtime_ns, os.stat(path).st_size] for path in dependencies if os.path.isfile(path)]}
+    try:
+        with open(manifestFile) as file:
+            previous = json.load(file)
+    except (FileNotFoundError, ValueError):
+        previous = None
+    if fileExists and manifest == previous:
         return objectFile
-    else:  # The original file or the flag file were modified recently
-        printingFunc()
-        RunCommand(cmd)
+    printingFunc()
+    RunCommand(cmd)
 
     if isMusic:  # Try to update the voicegroup manually
         counter = 0
@@ -180,14 +189,11 @@ def DoMiddleManAssembly(originalFile: str, assemblyFile: str, flagFile: str, fla
         if flags != [] and lineToChange != '' and '-G' in flags:
             ChangeFileLine(assemblyFile, counter, lineToChange + flags[flags.index('-G') + 1] + '\n')
 
-    regenerateObjectFile = func(assemblyFile)[1]
-    if regenerateObjectFile is False:
-        os.remove(assemblyFile)
-        return objectFile  # No point in recompiling file
-
     cmd = [AS] + ASFLAGS + ['-c', assemblyFile, '-o', objectFile]
     RunCommand(cmd)
     os.remove(assemblyFile)
+    with open(manifestFile, 'w') as file:
+        json.dump(manifest, file)
     return objectFile
 
 
@@ -213,6 +219,9 @@ def ProcessAssembly(assemblyFile: str) -> str:
 def ProcessC(cFile: str) -> str:
     """Compile C."""
     objectFile, regenerateObjectFile = MakeGeneralOutputFile(cFile)
+    headers = glob(os.path.join('include', '**/*.h'), recursive=True) + glob(os.path.join(SRC, '**/*.h'), recursive=True)
+    if os.path.isfile(objectFile) and any(os.path.getmtime(header) >= os.path.getmtime(objectFile) for header in headers):
+        regenerateObjectFile = True
     if regenerateObjectFile is False:
         return objectFile  # No point in recompiling file
 
@@ -235,7 +244,9 @@ def ProcessString(stringFile: str) -> str:
     objectFile = MakeGeneralOutputFile(assemblyFile)[0]
     fileExists = os.path.isfile(objectFile)
 
-    if fileExists and os.path.getmtime(objectFile) > os.path.getmtime(stringFile):
+    dependencies = [stringFile, 'charmap.tbl', 'scripts/string.py', 'scripts/insert.py']
+    dependencies += glob('include/**/*.h', recursive=True) + glob(SRC + '/**/*.h', recursive=True)
+    if fileExists and all(os.path.getmtime(objectFile) > os.path.getmtime(path) for path in dependencies):
         # If the .o file was created after the string file was last modified
         return objectFile
 
@@ -261,22 +272,31 @@ def GetFlagsFromFlagFile(filePath: str) -> [str]:
 
 
 def ProcessSpriteSet(fileListing: [str], flags: [str], outputFile: str, title: str):
+    fileListing = sorted(fileListing)
+    if not fileListing:
+        raise ValueError("No sprites found for " + title)
     assembledFile = os.path.join(ASSEMBLY, 'generated', outputFile)
-    if (not os.path.isfile(assembledFile)
-            or max(list(map(os.path.getmtime, fileListing))) > os.path.getmtime(assembledFile)):  # If a sprite has been modified
-        print("Processing {}.".format(title))
-        combinedFile = open(assembledFile, 'w')
+    manifestFile = assembledFile + '.json'
+    manifest = {'flags': flags, 'files': [[path, os.stat(path).st_mtime_ns, os.stat(path).st_size] for path in fileListing]}
+    try:
+        with open(manifestFile) as file:
+            previous = json.load(file)
+    except (FileNotFoundError, ValueError):
+        previous = {}
+    if os.path.isfile(assembledFile) and manifest == previous:
+        return
+    print("Processing {}.".format(title))
+    with open(assembledFile, 'w') as combinedFile:
         combinedFile.write('@THIS IS A GENERATED FILE! DO NOT MODIFY IT!\n')
         for sprite in fileListing:
-            assembled = sprite.split('.png')[0] + '.s'
-
-            if (not os.path.isfile(assembled)
-                    or os.path.getmtime(sprite) > os.path.getmtime(assembled)):
+            assembled = os.path.splitext(sprite)[0] + '.s'
+            if (not os.path.isfile(assembled) or previous.get('flags') != flags
+                    or os.path.getmtime(sprite) >= os.path.getmtime(assembled)):
                 RunCommand([GR, sprite] + flags + ['-o', assembled])
-
-            with open(assembled, 'r') as tempFile:
+            with open(assembled) as tempFile:
                 combinedFile.write(tempFile.read())
-        combinedFile.close()
+    with open(manifestFile, 'w') as file:
+        json.dump(manifest, file)
 
 
 def ProcessSpriteGraphics():
@@ -285,10 +305,10 @@ def ProcessSpriteGraphics():
     iconFlags = GetFlagsFromFlagFile(GRAPHICS + "/iconspriteflags.grit")
     castformFlags = GetFlagsFromFlagFile(GRAPHICS + "/castform/gritflags.txt")
 
-    backsprites = [file for file in glob(GRAPHICS + "/backspr" + "**/*.png", recursive=True)]
-    frontsprites = [file for file in glob(GRAPHICS + "/frontspr" + "**/*.png", recursive=True)]
-    iconsprites = [file for file in glob(GRAPHICS + "/pokeicon" + "**/*.png", recursive=True)]
-    castformsprites = [file for file in glob(GRAPHICS + "/castform" + "**/*.png", recursive=True)]
+    backsprites = [file for file in glob(GRAPHICS + "/backspr/" + "**/*.png", recursive=True)]
+    frontsprites = [file for file in glob(GRAPHICS + "/frontspr/" + "**/*.png", recursive=True)]
+    iconsprites = [file for file in glob(GRAPHICS + "/pokeicon/" + "**/*.png", recursive=True)]
+    castformsprites = [file for file in glob(GRAPHICS + "/castform/" + "**/*.png", recursive=True)]
 
     ProcessSpriteSet(frontsprites, frontFlags, 'frontsprites.s', "Front Sprites")
     ProcessSpriteSet(backsprites, backFlags, 'backsprites.s', "Back Sprites")
@@ -365,7 +385,7 @@ def RunGlob(globString: str, fn) -> map:
 
     if sys.version_info > (3, 4):
         try:
-            files = glob(os.path.join(directory, globString), recursive=True)
+            files = sorted(glob(os.path.join(directory, globString), recursive=True))
             return map(fn, files)
 
         except TypeError:
@@ -388,9 +408,6 @@ def main():
         '**/*.wav': ProcessAudio,
         '**/*.mid': ProcessMusic,
     }
-
-    if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
-        print("Warning! Python 3.8 may not be able to build this engine.\nPlease downgrade to Python 3.7.4")
 
     # Create output directory
     try:
@@ -422,12 +439,15 @@ def main():
     # Build special_inserts.asm
     if os.path.isfile('special_inserts.asm'):
         if not os.path.isfile('build/special_inserts.bin') \
-                or os.path.getmtime('build/special_inserts.bin') < os.path.getmtime('special_inserts.asm'):
+                or os.path.getmtime('build/special_inserts.bin') < max(os.path.getmtime('special_inserts.asm'), os.path.getmtime(linked)):
             print('Assembling special_inserts.asm')
             cmd = [AS] + ASFLAGS + ['-c', 'special_inserts.asm', '-o', 'build/special_inserts.o']
             RunCommand(cmd)
 
-            cmd = [OBJCOPY, '-O', 'binary', 'build/special_inserts.o', 'build/special_inserts.bin']
+            cmd = [LD, '--just-symbols=' + linked, '-Ttext=0', '-e', '0', '-o', 'build/special_inserts.elf', 'build/special_inserts.o']
+            RunCommand(cmd)
+
+            cmd = [OBJCOPY, '-O', 'binary', 'build/special_inserts.elf', 'build/special_inserts.bin']
             RunCommand(cmd)
 
     print('Built in ' + str(datetime.now() - startTime) + '.')

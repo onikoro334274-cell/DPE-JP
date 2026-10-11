@@ -2,6 +2,8 @@
 # -*- coding: cp437 -*-
 
 import sys
+import os
+from functools import lru_cache
 from insert import TryProcessFileInclusion, TryProcessConditionalCompilation
 
 CharMap = "charmap.tbl"
@@ -102,13 +104,16 @@ def StringFileConverter(fileName: str):
                         maxLength = int(line.split("=")[1])
                     except:
                         print('Error reading max length on line ' + str(lineNum) + ' in file: "' + fileName + '"')
-                        sys.exit(0)
+                        sys.exit(1)
                 elif "FILL_FF" in line and "=" in line:
                     try:
-                        fillFF = bool(line.split("=")[1])
+                        value = line.split("=", 1)[1].strip().lower()
+                        if value not in {"true", "false", "1", "0"}:
+                            raise ValueError("FILL_FF must be True or False")
+                        fillFF = value in {"true", "1"}
                     except:
                         print('Error reading FF fill on line ' + str(lineNum) + ' in file: "' + fileName + '"')
-                        sys.exit(0)
+                        sys.exit(1)
                 else:
                     print('Warning! Error on line ' + str(lineNum) + ' in file: "' + fileName + '"')
                     
@@ -174,7 +179,7 @@ def ProcessString(string: str, lineNum: int, maxLength=0, fillWithFF=False) -> s
 
             except KeyError:
                 print('Error parsing string: "' + string + '" (Line ' + str(lineNum) + ')')
-                sys.exit(0)
+                sys.exit(1)
 
         else:
             try:
@@ -187,12 +192,15 @@ def ProcessString(string: str, lineNum: int, maxLength=0, fillWithFF=False) -> s
                 elif char == '\\':
                     escapeChar = True
                 elif char == '"':
-                    stringToWrite += hex(charMap["\\" + char])
+                    stringToWrite += hex(charMap["\\" + char]) + ", "
                     strLen += 1
                 else:
                     print('Error parsing string on line ' + str(lineNum) + ' at character "' + char + '".')
                     sys.exit(1)
     
+    if buffer or escapeChar:
+        raise ValueError("Unterminated buffer or escape on line {}".format(lineNum))
+
     if strLen < maxLength and fillWithFF:
         while strLen < maxLength:
             stringToWrite += "0xFF, "
@@ -202,8 +210,13 @@ def ProcessString(string: str, lineNum: int, maxLength=0, fillWithFF=False) -> s
 
 
 def PokeByteTableMaker():
+    return _LoadByteTable(CharMap, os.stat(CharMap).st_mtime_ns)
+
+
+@lru_cache(maxsize=1)
+def _LoadByteTable(path, modified):
     dictionary = {}
-    with open(CharMap, 'r', encoding="utf-8") as file:
+    with open(path, 'r', encoding="utf-8") as file:
         for line in file:
             if line.strip() != "/FF" and line.strip() != "":
                 if line[2] == '=' and line[3] != "":

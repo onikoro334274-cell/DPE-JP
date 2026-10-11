@@ -75,7 +75,7 @@ __gnu_thumb1_case_shi:
 	.syntax unified
     .global __gnu_thumb1_case_si
     .thumb_func
-    .type __gnu_thumb1_case_shi,function
+    .type __gnu_thumb1_case_si,function
 __gnu_thumb1_case_si:
         push    {r0, r1}
         mov     r1, lr
@@ -116,13 +116,17 @@ __aeabi_idiv:
     .thumb_func
     .type __aeabi_idivmod,function
 __aeabi_idivmod:
-	push {lr}
-	bl ActualModulationInt
-.byte 0x01, 0x1C @;mov r1, r0 - Return to r1 for some reason
-	pop {pc}
-	
-ActualModulationInt:
-	ldr r3, =(__modsi3)
+	push {r4, r5, r6, lr} @ Keep the stack 8-byte aligned
+	movs r4, r0
+	movs r5, r1
+	bl ActualDivisionInt
+	movs r1, r5
+	muls r1, r0
+	subs r1, r4, r1 @ r0 = quotient, r1 = remainder
+	pop {r4, r5, r6, pc}
+
+ActualDivisionInt:
+	ldr r3, =(__divsi3)
 	bx r3
 	.size __aeabi_idivmod, . - __aeabi_idivmod
 
@@ -132,13 +136,17 @@ ActualModulationInt:
     .thumb_func
     .type __aeabi_uidivmod,function
 __aeabi_uidivmod:
-	push {lr}
-	bl ActualModulationUInt
-.byte 0x01, 0x1C @;mov r1, r0 - Return to r1 for some reason
-	pop {pc}
-	
-ActualModulationUInt:
-	ldr r3, =(__umodsi3)
+	push {r4, r5, r6, lr} @ Keep the stack 8-byte aligned
+	movs r4, r0
+	movs r5, r1
+	bl ActualDivisionUInt
+	movs r1, r5
+	muls r1, r0
+	subs r1, r4, r1 @ r0 = quotient, r1 = remainder
+	pop {r4, r5, r6, pc}
+
+ActualDivisionUInt:
+	ldr r3, =(__udivsi3)
 	bx r3
 	.size __aeabi_uidivmod, . - __aeabi_uidivmod
 

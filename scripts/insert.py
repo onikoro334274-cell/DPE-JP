@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import hashlib
 import subprocess
 import shutil
 import sys
@@ -12,7 +13,7 @@ SOURCE_ROM = "BPRJ0.gba"
 ROM_NAME = "test.gba"
 
 if sys.platform.startswith('win'):
-    PathVar = os.environ.get('Path')
+    PathVar = os.environ.get('Path', os.environ.get('PATH', ''))
     Paths = PathVar.split(';')
     PATH = ''
     for candidatePath in Paths:
@@ -21,9 +22,6 @@ if sys.platform.startswith('win'):
             break
     if PATH == '':
         PATH = 'C://devkitPro//devkitARM//bin'
-        if os.path.isdir(PATH) is False:
-            print('Devkit not found.')
-            sys.exit(1)
 
     PREFIX = 'arm-none-eabi-'
     OBJDUMP = os.path.join(PATH, PREFIX + 'objdump')
@@ -159,46 +157,34 @@ IGNORED_OFFSETS = [0x3986C0, 0x3986EC, 0xDABDF0]
 
 
 def RealRepoint(rom: _io.BufferedReader, offsetTuples: [(int, int, str)]):
-    pointerList = []
     pointerDict = {}
-    for tup in offsetTuples:  # Format is (Double Pointer, New Pointer, Symbol)
-        offset = tup[0]
+    for offset, newPointer, symbol in offsetTuples:
         rom.seek(offset)
-        pointer = ExtractPointer(rom.read(4))
-        pointerList.append(pointer)
-        pointerDict[pointer] = (tup[1] + 0x08000000, tup[2])
-
-    offset = 0
+        data = rom.read(4)
+        if len(data) != 4:
+            raise ValueError("Pointer address outside ROM")
+        pointerDict[ExtractPointer(data)] = (newPointer + 0x08000000, symbol)
+    rom.seek(0)
+    data = bytearray(rom.read(0x1000000))
     offsetList = []
-
-    while offset < 0xFFFFFD:
-        if offset in IGNORED_OFFSETS:
-            offset += 4
+    ignored = set(IGNORED_OFFSETS)
+    for offset in range(0, len(data) - 3, 4):
+        if offset in ignored:
             continue
-
-        rom.seek(offset)
-        word = ExtractPointer(rom.read(4))
-        rom.seek(offset)
-
-        for pointer in pointerList:
-            if word == pointer:
-                offsetList.append((offset, pointerDict[pointer][1]))
-                rom.write(bytes(pointerDict[pointer][0].to_bytes(4, 'little')))
-                break
-
-        offset += 4
-
+        word = int.from_bytes(data[offset:offset + 4], 'little')
+        replacement = pointerDict.get(word)
+        if replacement is not None:
+            data[offset:offset + 4] = replacement[0].to_bytes(4, 'little')
+            offsetList.append((offset, replacement[1]))
+    rom.seek(0)
+    rom.write(data)
     return offsetList
 
 
 def ReplaceBytes(rom: _io.BufferedReader, offset: int, data: str):
-    ar = offset
-    words = data.split()
-    for i in range(0, len(words)):
-        rom.seek(ar)
-        intByte = int(words[i], 16)
-        rom.write(bytes(intByte.to_bytes(1, 'big')))
-        ar += 1
+    dataBytes = bytes(int(word, 16) for word in data.split())
+    rom.seek(offset)
+    rom.write(dataBytes)
 
 
 def TryProcessFileInclusion(line: str, definesDict: dict) -> bool:
@@ -221,9 +207,8 @@ def TryProcessFileInclusion(line: str, definesDict: dict) -> bool:
                         except IndexError:
                             print('Error reading define on line"' + line.strip() + '" in file "' + path + '".')
 
-        except Exception as e:
-            print('Error including file on line "' + line.strip() + '".')
-            print(e)
+        except (OSError, ValueError) as error:
+            raise ValueError('Error including file on line "' + line.strip() + '": ' + str(error)) from error
 
         return True  # Inclusion line; don't read otherwise
 
@@ -269,8 +254,34 @@ def TryProcessConditionalCompilation(line: str, definesDict: dict, conditionals:
     return False
 
 
+def RepointCacheSignature():
+    digest = hashlib.sha256()
+    with open(SOURCE_ROM, 'rb') as file:
+        for chunk in iter(lambda: file.read(65536), b''):
+            digest.update(chunk)
+    paths = [REPOINT_ALL]
+    if os.path.isfile(REPOINT_ALL):
+        with open(REPOINT_ALL) as file:
+            for line in file:
+                if line.startswith('#include "'):
+                    paths.append(line.split('"')[1])
+    for path in paths:
+        digest.update(path.encode())
+        with open(path, 'rb') as file:
+            digest.update(file.read())
+    return '# cache-sha256: ' + digest.hexdigest() + '\n'
+
+
 def main():
+    if any(shutil.which(tool) is None for tool in (OBJDUMP, NM, AS)):
+        print('Devkit not found.', file=sys.stderr)
+        sys.exit(1)
     startTime = datetime.now()
+    if OFFSET_TO_PUT < 0 or OFFSET_TO_PUT + os.path.getsize(OUTPUT) > 0x2000000:
+        raise ValueError("Inserted engine exceeds the 32 MiB GBA ROM limit")
+    textSection = GetTextSection()
+    if textSection != 0x08000000 + OFFSET_TO_PUT:
+        raise ValueError("Linker and insertion offsets differ; rebuild with scripts/make.py")
 
     try:
         shutil.copyfile(SOURCE_ROM, ROM_NAME)
@@ -287,7 +298,7 @@ def main():
 
     with open(ROM_NAME, 'rb+') as rom:
         print("Inserting code.")
-        table = GetSymbols(GetTextSection())
+        table = GetSymbols(textSection)
         rom.seek(OFFSET_TO_PUT)
         with open(OUTPUT, 'rb') as binary:
             rom.write(binary.read())
@@ -422,7 +433,12 @@ def main():
                         Repoint(rom, code, offset, int(slide))
 
         symbolsRepointed = set()
-        if os.path.isfile(GENERATED_REPOINTS):
+        signature = RepointCacheSignature() if os.path.isfile(REPOINT_ALL) else None
+        cacheValid = False
+        if os.path.isfile(GENERATED_REPOINTS) and signature is not None:
+            with open(GENERATED_REPOINTS) as file:
+                cacheValid = file.readline() == signature
+        if cacheValid:
             with open(GENERATED_REPOINTS, 'r') as repointList:
                 for line in repointList:
                     if line.strip().startswith('#') or line.strip() == '':
@@ -441,7 +457,7 @@ def main():
 
         else:
             with open(GENERATED_REPOINTS, 'w') as repointList:
-                repointList.write('##This is a generated file at runtime. Do not modify it!\n')
+                repointList.write(signature or '##This is a generated file at runtime. Do not modify it!\n')
 
         if os.path.isfile(REPOINT_ALL):
             offsetsToRepointTogether = []

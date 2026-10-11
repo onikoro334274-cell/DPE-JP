@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from glob import glob
 
 # Data
@@ -24,72 +25,57 @@ def TutorDataBuilder():
 
 
 def DataBuilder(directory: str, numEntries: int, outputFile: str, dataType: str):
-    fileList = [file for file in glob(directory + "**/*.txt", recursive=True)]
-    if os.path.isfile(outputFile) and max(list(map(os.path.getmtime, fileList))) < os.path.getmtime(outputFile):
+    fileList = sorted(glob(os.path.join(directory, '**', '*.txt'), recursive=True))
+    if not fileList or numEntries <= 0:
+        raise ValueError("Missing compatibility files or invalid move count")
+    dependencies = fileList + [SPECIES_DEFINES, 'scripts/tm_tutor.py']
+    manifest = {'entries': numEntries, 'species': SPECIES_COUNT,
+                'files': [[path, os.stat(path).st_mtime_ns, os.stat(path).st_size] for path in dependencies]}
+    manifestFile = outputFile + '.json'
+    try:
+        with open(manifestFile) as file:
+            previous = json.load(file)
+    except (FileNotFoundError, ValueError):
+        previous = None
+    if os.path.isfile(outputFile) and manifest == previous:
         return
 
     print("Processing {} Data.".format(dataType))
-    output = open(outputFile, 'w')
-    compatibilityTable = PokemonDataListInitializer(numEntries)
-
+    compatibilityTable = [bytearray((numEntries + 7) // 8) for _ in range(SPECIES_COUNT)]
+    seenIds = set()
     for filePath in fileList:
-        try:
-            if sys.platform.startswith('win'):
-                delimiter = '\\'
-            else:  # OSX, Linux
-                delimiter = '/'
-            tmId = filePath.split()[0].split(delimiter)
-            tmId = int(tmId[len(tmId) - 1])
-            tmId -= 1
-
-            if tmId >= numEntries:
-                print('Ignoring file: "{}"\nTM number not valid.'.format(filePath))
-                continue  # Don't process this file if not valid
-        except ValueError:
-            print('Ignoring file: "{}"\nNot valid TM file.'.format(filePath))
-            continue  # Don't process this file if not proper TM file
-
-        with open(filePath, 'r') as file:
-            for i, line in enumerate(file):
-                if ':' not in line:  # Aka not the first line
+        tmId = int(os.path.basename(filePath).split()[0]) - 1
+        if not 0 <= tmId < numEntries or tmId in seenIds:
+            raise ValueError("Invalid or duplicate move number in " + filePath)
+        seenIds.add(tmId)
+        with open(filePath) as file:
+            for i, line in enumerate(file, 1):
+                value = line.strip()
+                if not value or ':' in value or value.startswith('//'):
+                    continue
+                try:
+                    species = int(value)
+                except ValueError:
                     try:
-                        lineContents = int(line)  # Species entered as integer
-                        compatibilityTable[lineContents][tmId] = 1
+                        species = int(value, 16)
                     except ValueError:
-                        try:
-                            lineContents = int(ReverseSpeciesDict[line.strip()])  # Species entered as species name
-                            compatibilityTable[lineContents][tmId] = 1
-                        except ValueError:
-                            lineContents = int(line, 16)  # Species entered as hex
-                            compatibilityTable[lineContents][tmId] = 1
-                        except KeyError:  # Species name was not found
-                            try:
+                        key = value if value.startswith('SPECIES_') else 'SPECIES_' + value
+                        if key not in ReverseSpeciesDict:
+                            raise ValueError("Unknown species {} at {}:{}".format(value, filePath, i))
+                        species = ReverseSpeciesDict[key]
+                if not 0 <= species < SPECIES_COUNT:
+                    raise ValueError("Species outside table at {}:{}".format(filePath, i))
+                compatibilityTable[species][tmId // 8] |= 1 << (tmId % 8)
 
-                                lineContents = int(ReverseSpeciesDict["SPECIES_" + line.strip()])
-                                compatibilityTable[lineContents][tmId] = 1
-                            except KeyError:
-                                print('Error with key: {} on line {} in: {}'.format(line.strip(), i + 1, filePath))
-
-    output.write(".thumb\n.align 2\n\n@THIS IS A GENERATED FILE! DO NOT MODIFY IT!\n\n"
-                 ".global g{}Learnsets\ng{}Learnsets:\n".format(dataType, dataType))
-    for i, mon in enumerate(compatibilityTable):
-        output.write(".byte ")
-        data = FixEndian(''.join(str(a) for a in mon))
-
-        byte = ""
-        for j, bit in enumerate(data):
-            byte += bit
-            if j % 8 == 7:
-                byte = int(byte, 2)
-                if j + 1 >= len(data):
-                    output.write(hex(byte))  # End of line
-                else:
-                    output.write(hex(byte) + ",")
-                byte = ""
-
-        output.write("\n")
-
-    output.close()
+    temporary = outputFile + '.tmp'
+    with open(temporary, 'w') as output:
+        output.write(".thumb\n.align 2\n\n@THIS IS A GENERATED FILE! DO NOT MODIFY IT!\n\n"
+                     ".global g{}Learnsets\ng{}Learnsets:\n".format(dataType, dataType))
+        for mon in compatibilityTable:
+            output.write('.byte ' + ','.join(hex(byte) for byte in mon) + '\n')
+    os.replace(temporary, outputFile)
+    with open(manifestFile, 'w') as file:
+        json.dump(manifest, file)
 
 
 # Utility Functions
@@ -139,21 +125,17 @@ def ReverseDict(dictionary: {}):
 
 
 def ChangeFileLine(filePath: str, lineToChange: int, replacement: str):
-    with open(filePath, 'r') as file:
-        copy = file.read()
-        file.seek(0x0)
-        lineNum = 1
-        for line in file:
-            if lineNum == lineToChange:
-                copy = copy.replace(line, replacement)
-                break
-            lineNum += 1
-
+    with open(filePath) as file:
+        lines = file.readlines()
+    if not 1 <= lineToChange <= len(lines):
+        raise ValueError("Line number outside file")
+    lines[lineToChange - 1] = replacement
     with open(filePath, 'w') as file:
-        file.write(copy)
+        file.writelines(lines)
 
 
 SpeciesDict = DefinesDictMaker(SPECIES_DEFINES)
+SPECIES_COUNT = max(SpeciesDict) + 1
 ReverseSpeciesDict = ReverseDict(SpeciesDict)
 
 if __name__ == '__main__':

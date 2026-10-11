@@ -130,7 +130,7 @@ u16 NationalPokedexNumToSpecies(u16 nationalNum)
 {
 	u16 species, i;
 
-	if (nationalNum == 0)
+	if (nationalNum == 0 || nationalNum > FINAL_DEX_ENTRY)
 		return 0;
 
 	species = 0;
@@ -142,9 +142,9 @@ u16 NationalPokedexNumToSpecies(u16 nationalNum)
 		{
 			if (nationalNum > sPivotalDexSpecies[i].dexNum)
 			{
-				u16 difference = nationalNum - sPivotalDexSpecies[i].dexNum;
-				if (gSpeciesToNationalPokedexNum[sPivotalDexSpecies[i].species + difference - 1] == nationalNum)
-					return sPivotalDexSpecies[i].species + difference;
+				u32 candidate = sPivotalDexSpecies[i].species + (u32) nationalNum - sPivotalDexSpecies[i].dexNum;
+				if (candidate < NUM_SPECIES && gSpeciesToNationalPokedexNum[candidate - 1] == nationalNum)
+					return candidate;
 				break;
 			}
 		}
@@ -194,7 +194,7 @@ void LoadSpecialPokePic(const struct CompressedSpriteSheet* src, void* dest, u16
 		else
 			LZ77UnCompWram((void*) gMonFrontPicTable[i].data, dest);
 	}
-	else if (species > NUM_SPECIES) // is species unknown? draw the ? icon
+	else if (oldSpecies >= NUM_SPECIES) // is species unknown? draw the ? icon
 		LZ77UnCompWram((void*) gMonFrontPicTable[0].data, dest);
 	else
 		LZ77UnCompWram((void*) src->data, dest);
@@ -208,7 +208,7 @@ const u32* GetFrontSpritePalFromSpeciesAndPersonality(u16 species, u32 otId, u32
 	
 	species = TryGetFemaleGenderedSpecies(species, personality);
 	
-	if (species > NUM_SPECIES)
+	if (species >= NUM_SPECIES)
 		return (u32*) gMonPaletteTable[0].data;
 
 	shinyValue = HIHALF(otId) ^ LOHALF(otId) ^ HIHALF(personality) ^ LOHALF(personality);
@@ -232,6 +232,9 @@ const struct CompressedSpritePalette* GetMonSpritePalStructFromOtIdPersonality(u
 
 u16 TryGetFemaleGenderedSpecies(u16 species, u32 personality)
 {
+	if (species >= NUM_SPECIES)
+		return SPECIES_NONE;
+
 	if (GetGenderFromSpeciesAndPersonality(species, personality) == MON_FEMALE)
 	{
 		switch (species) {
@@ -276,7 +279,7 @@ u16 GetIconSpecies(u16 species, u32 personality)
 	}
 	else
 	{
-		if (species > NUM_SPECIES)
+		if (species >= NUM_SPECIES)
 			result = 0;
 		else
 			result = TryGetFemaleGenderedSpecies(species, personality);
@@ -493,7 +496,7 @@ static u16 LoadNationalPokedexView(void)
 		}
 	}
 
-	return lastMeaningfulIndex;
+	return lastMeaningfulIndex ? lastMeaningfulIndex : 1;
 }
 
 void DexScreen_PrintNum3LeadingZeroes(u8 windowId, u8 fontId, u16 num, u8 x, u8 y, u8 colorIdx)

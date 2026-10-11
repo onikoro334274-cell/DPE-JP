@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import shutil
+import subprocess
 import sys
 
 ############
@@ -23,77 +23,80 @@ SEARCH_FREE_SPACE = False  # Set to True if you want the script to search for fr
 
 
 def MakeOffset0x100Aligned(offset: int) -> int:
-    while offset % 16 != 0:
-        offset += 1
-
-    return offset
+    return (offset + 15) & ~15
 
 
 def FindOffsetToPut(rom, neededBytes: int, startOffset: int) -> int:
-    offset = startOffset
-    rom.seek(0, 2)
-    maxPosition = rom.tell()
-    numFoundBytes = 0
-
-    while numFoundBytes < neededBytes:
-        if offset + numFoundBytes >= maxPosition:
-            print("End of file reached. Not enough free space.")
-            return 0
-
-        numFoundBytes += 1
-        rom.seek(offset + numFoundBytes)
-        if rom.read(1) != b'\xFF':
-            offset = MakeOffset0x100Aligned(offset + numFoundBytes)
-            numFoundBytes = 0
-
-    return offset
+    if neededBytes <= 0 or startOffset < 0:
+        raise ValueError("Invalid free-space search range")
+    offset = MakeOffset0x100Aligned(startOffset)
+    rom.seek(offset)
+    run_start = offset
+    run_length = 0
+    while True:
+        chunk = rom.read(65536)
+        if not chunk:
+            raise ValueError("End of file reached. Not enough free space.")
+        for value in chunk:
+            if value != 0xFF:
+                run_length = 0
+                run_start = MakeOffset0x100Aligned(offset + 1)
+            elif offset >= run_start:
+                run_length += 1
+                if run_length >= neededBytes:
+                    return run_start
+            offset += 1
 
 
 def ChangeFileLine(filePath: str, lineToChange: int, replacement: str):
     with open(filePath, 'r') as file:
-        copy = file.read()
-        file.seek(0x0)
-        lineNum = 1
-        for line in file:
-            if lineNum == lineToChange:
-                copy = copy.replace(line, replacement)
-                break
-            lineNum += 1
-
+        lines = file.readlines()
+    if not 1 <= lineToChange <= len(lines):
+        raise ValueError("Line number outside file")
+    lines[lineToChange - 1] = replacement
     with open(filePath, 'w') as file:
-        file.write(copy)
+        file.writelines(lines)
 
 
 def EditLinker(offset: int):
-    ChangeFileLine("linker.ld", 4, "\t\trom     : ORIGIN = (0x08000000 + " + hex(offset) + "), LENGTH = 32M\n")
+    if not 0 <= offset < 0x2000000 or offset % 4:
+        raise ValueError("Insertion offset must be aligned and inside a 32 MiB ROM")
+    ChangeFileLine("linker.ld", 4, "\t\trom     : ORIGIN = (0x08000000 + " + hex(offset)
+                   + "), LENGTH = (32M - " + hex(offset) + ")\n")
 
 
 def EditInsert(offset: int):
-    ChangeFileLine("./scripts/insert.py", 10, "OFFSET_TO_PUT = " + hex(offset) + '\n')
-    ChangeFileLine("./scripts/insert.py", 11, 'SOURCE_ROM = "' + ROM_NAME + '"\n')
+    filePath = "./scripts/insert.py"
+    with open(filePath) as file:
+        lines = file.readlines()
+    replacements = {'OFFSET_TO_PUT': hex(offset), 'SOURCE_ROM': repr(ROM_NAME)}
+    for name, value in replacements.items():
+        matches = [i for i, line in enumerate(lines) if line.split('=', 1)[0].strip() == name]
+        if len(matches) != 1:
+            raise ValueError("Expected one assignment for " + name)
+        lines[matches[0]] = name + ' = ' + value + '\n'
+    with open(filePath, 'w') as file:
+        file.writelines(lines)
 
 
 def BuildCode():
-    if shutil.which('python3') is not None:
-        result = os.system("python3 scripts/build.py")
-    else:
-        result = os.system("python scripts/build.py")
-
-    if result != 0:  # Build wasn't sucessful
-        sys.exit(1)
+    subprocess.check_call([sys.executable, "scripts/build.py"])
 
 
 def InsertCode():
-    if shutil.which('python3') is not None:
-        os.system("python3 scripts/insert.py")
-    else:
-        os.system("python scripts/insert.py")
+    subprocess.check_call([sys.executable, "scripts/insert.py"])
 
 
 def ClearFromTo(rom, from_: int, to_: int):
+    if from_ < 0 or to_ < from_:
+        raise ValueError("Invalid clear range")
     rom.seek(from_)
-    for i in range(0, to_ - from_):
-        rom.write(b'\xFF')
+    remaining = to_ - from_
+    block = b'\xFF' * 65536
+    while remaining:
+        size = min(remaining, len(block))
+        rom.write(block[:size])
+        remaining -= size
 
 ##############
 # Functions end here.
@@ -102,7 +105,7 @@ def ClearFromTo(rom, from_: int, to_: int):
 
 def main():
     try:
-        with open(ROM_NAME, 'rb+') as rom:
+        with open(ROM_NAME, 'rb') as rom:
             offset = OFFSET_TO_PUT
             if SEARCH_FREE_SPACE is True:
                 offset = FindOffsetToPut(rom, 0x50000, MakeOffset0x100Aligned(offset))
@@ -116,6 +119,10 @@ def main():
     except FileNotFoundError:
         print('Error: Could not find source rom: "' + ROM_NAME + '".\n'
               + 'Please make sure a rom with this name exists in the root.')
+        sys.exit(1)
+    except (ValueError, subprocess.CalledProcessError) as error:
+        print('Error:', error, file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
