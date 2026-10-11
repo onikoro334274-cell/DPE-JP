@@ -73,12 +73,23 @@ GenderedMonIconHook:
 
 	mov r0, r4
 	ldr r1, [sp, #0x50] @Personality
-	bl TryGetFemaleGenderedSpecies
+	bl HackMoemon_IconHookSpecies @[hack] Moemon icons (patches/0221)
 	mov r4, r0
 
 	ldr r1, [sp, #0x50] @Personality
 	ldr r0, =0x809686C | 1
 	bx r0
+
+.pool
+@0x8073EE4 with r1
+@[hack] Moemon battle sprite height (patches/0222)
+HackMoemonYDeltaHook:
+	mov r1, r5 @battler
+	mov r2, r7 @species
+	bl HackMoemon_BattlerYDelta
+	pop {r4-r7}
+	pop {r1}
+	bx r1
 
 .pool
 @0x8139DDC with r1
@@ -117,10 +128,7 @@ EvolutionSceneHook1:
 	mov r10, r0
 	mov r0, r5 @currSpecies
 	mov r1, r10 @personality
-	bl TryGetFemaleGenderedSpecies
-	lsl r0, #0x3
-	ldr r1, =gMonFrontPicTable
-	add r0, r1
+	bl HackMoemon_EvoFrontSheet @[hack] patches/0218 Moémon の絵（無ければ &gMonFrontPicTable[TryGetFemaleGenderedSpecies]）
 	ldr r2, =0x80CF070 | 1
 	bx r2
 
@@ -130,10 +138,7 @@ EvolutionSceneHook2:
 	strb r0, [r1]
 	mov r0, r9 @speciesToEvolve
 	mov r1, r10 @personality
-	bl TryGetFemaleGenderedSpecies
-	lsl r0, #0x3
-	ldr r2, =gMonFrontPicTable
-	add r0, r2
+	bl HackMoemon_EvoFrontSheet @[hack] patches/0218
 	ldr r2, =0x80CF0EA | 1
 	bx r2
 
@@ -143,11 +148,29 @@ EvolutionSceneHook3:
 	strb r0, [r1]
 	mov r0, r5 @postEvoSpecies
 	mov r1, r6 @personality
-	bl TryGetFemaleGenderedSpecies
-	lsl r0, #0x3
-	ldr r1, =gMonFrontPicTable
-	add r0, r1
+	bl HackMoemon_EvoFrontSheet @[hack] patches/0218
 	ldr r2, =0x80CF320 | 1
+	bx r2
+
+.pool
+@[hack] patches/0303 通信進化も Moémon の絵（ユーザー「moemon を通信進化させると進化後のグラフィックがおかしい」）。
+@0x80CF580 with r1: CB2_TradeEvolutionSceneLoadGraphics（r6 = 進化後の種族・r4 = 性格値）。上書き = lsl/ldr 表/add/ldr gMonSpritesGfxPtr
+TradeEvolutionLoadGraphicsHook:
+	mov r0, r6
+	mov r1, r4
+	bl HackMoemon_EvoFrontSheet
+	ldr r1, =0x02023F7C @gMonSpritesGfxPtr
+	ldr r2, =0x80CF588 | 1
+	bx r2
+
+.pool
+@0x80CF714 with r1: TradeEvolutionScene（r5 = 進化後の種族・r7 = 性格値）。上書き = lsl/ldr 表/add/ldr gMonSpritesGfxPtr
+TradeEvolutionSceneHook:
+	mov r0, r5
+	mov r1, r7
+	bl HackMoemon_EvoFrontSheet
+	ldr r1, =0x02023F7C @gMonSpritesGfxPtr
+	ldr r2, =0x80CF71C | 1
 	bx r2
 
 .pool

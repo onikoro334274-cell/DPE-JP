@@ -11421,6 +11421,27 @@ const struct PokedexEntry gPokedexEntries[NATIONAL_DEX_COUNT] =
 		.trainerScale = 0,
 		.trainerOffset = 0,
 	},
+/* KAGENONAKANI BEGIN (tools/custom_mon/kagenonakani/build_kagenonakani.py・MAKIO419) */
+	[NATIONAL_DEX_KAGENONAKANI] = {
+		.categoryName = {_ge, _nn, _ee, _ii, _SPACE, _SPACE},
+		.height = 19, .weight = 680, .description = DEX_ENTRY_KAGENONAKANI,
+		.pokemonScale = 256, .pokemonOffset = 0, .trainerScale = 256, .trainerOffset = 0,
+	},
+/* KAGENONAKANI END */
+/* RINDORIS BEGIN (tools/custom_mon/rindoris/build_rindoris.py・詩音) */
+	[NATIONAL_DEX_RINDORIS] = {
+		.categoryName = {_ii, _ni, _si, _ee, _SPACE, _SPACE},
+		.height = 11, .weight = 305, .description = DEX_ENTRY_RINDORIS,
+		.pokemonScale = 256, .pokemonOffset = 0, .trainerScale = 256, .trainerOffset = 0,
+	},
+/* RINDORIS END */
+/* GIGAMINE BEGIN (tools/custom_mon/gigamine/build_gigamine.py・やん之助) */
+	[NATIONAL_DEX_GIGAMINE] = {
+		.categoryName = {_wa, _ku, _se, _ii, _SPACE, _SPACE},
+		.height = 15, .weight = 777, .description = DEX_ENTRY_GIGAMINE,
+		.pokemonScale = 256, .pokemonOffset = 0, .trainerScale = 256, .trainerOffset = 0,
+	},
+/* GIGAMINE END */
 };
 
 //Certain Pokemon forms can have alternate dex entries when viewed
@@ -11532,5 +11553,5 @@ const struct AlternateDexEntries gAlternateDexEntries[] =
 	ALTERNATE_ENTRY(OGERPON_HEARTHFLAME_MASK),
 	ALTERNATE_ENTRY(OGERPON_CORNERSTONE_MASK),
 	ALTERNATE_ENTRY(TERAPAGOS_TERASTAL),
-	{SPECIES_TABLES_TERMIN, 0} 
+	{SPECIES_TABLES_TERMIN, 0}, 
 };

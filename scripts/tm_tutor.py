@@ -5,7 +5,7 @@ from glob import glob
 # Data
 TM_HM_COUNT = 128
 TUTOR_COUNT = 152
-SPECIES_COUNT = 0x59F + 1
+SPECIES_COUNT = 0x5D3 + 1  # ZAと自作の種族の末尾（tools/megas/build_za_megas.py）
 
 TM_OUTPUT = "assembly/generated/tm_compatibility.s"
 TUTOR_OUTPUT = "assembly/generated/tutor_compatibility.s"

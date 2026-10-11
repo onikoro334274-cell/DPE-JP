@@ -2599,6 +2599,282 @@ const u16 gRarePage37[] =
 	SPECIES_CALYREX_SHADOW_RIDER,
 };
 
+/* HACK_HABITAT_EXTRA BEGIN（tools/dex/build_habitat_extra.py の生成物・手で直さない） */
+const u16 gHackHabitatGrassland1[] =
+{
+	SPECIES_KLEAVOR,
+	SPECIES_LECHONK,
+	SPECIES_OINKOLOGNE,
+	SPECIES_TANDEMAUS,
+};
+
+const u16 gHackHabitatGrassland2[] =
+{
+	SPECIES_MAUSHOLD,
+	SPECIES_FIDOUGH,
+	SPECIES_DACHSBUN,
+	SPECIES_SQUAWKABILLY,
+};
+
+const u16 gHackHabitatGrassland3[] =
+{
+	SPECIES_TINKATINK,
+	SPECIES_TINKATUFF,
+	SPECIES_TINKATON,
+	SPECIES_BOMBIRDIER,
+};
+
+const u16 gHackHabitatGrassland4[] =
+{
+	SPECIES_FLAMIGO,
+	SPECIES_FARIGIRAF,
+};
+
+const u16 gHackHabitatForest1[] =
+{
+	SPECIES_WYRDEER,
+	SPECIES_SNEASLER,
+	SPECIES_SPRIGATITO,
+	SPECIES_FLORAGATO,
+};
+
+const u16 gHackHabitatForest2[] =
+{
+	SPECIES_MEOWSCARADA,
+	SPECIES_TAROUNTULA,
+	SPECIES_SPIDOPS,
+	SPECIES_NYMBLE,
+};
+
+const u16 gHackHabitatForest3[] =
+{
+	SPECIES_LOKIX,
+	SPECIES_SMOLIV,
+	SPECIES_DOLLIV,
+	SPECIES_ARBOLIVA,
+};
+
+const u16 gHackHabitatForest4[] =
+{
+	SPECIES_BRAMBLIN,
+	SPECIES_BRAMBLEGHAST,
+	SPECIES_CAPSAKID,
+	SPECIES_SCOVILLAIN,
+};
+
+const u16 gHackHabitatForest5[] =
+{
+	SPECIES_RELLOR,
+	SPECIES_RABSCA,
+	SPECIES_DIPPLIN,
+	SPECIES_POLTCHAGEIST,
+};
+
+const u16 gHackHabitatForest6[] =
+{
+	SPECIES_SINISTCHA,
+	SPECIES_HYDRAPPLE,
+};
+
+const u16 gHackHabitatWatersEdge1[] =
+{
+	SPECIES_BASCULEGION_M,
+	SPECIES_QUAXLY,
+	SPECIES_QUAXWELL,
+	SPECIES_QUAQUAVAL,
+};
+
+const u16 gHackHabitatWatersEdge2[] =
+{
+	SPECIES_CLODSIRE,
+};
+
+const u16 gHackHabitatSea1[] =
+{
+	SPECIES_OVERQWIL,
+	SPECIES_WIGLETT,
+	SPECIES_WUGTRIO,
+	SPECIES_FINIZEN,
+};
+
+const u16 gHackHabitatSea2[] =
+{
+	SPECIES_PALAFIN,
+	SPECIES_VELUZA,
+	SPECIES_DONDOZO,
+	SPECIES_TATSUGIRI,
+};
+
+const u16 gHackHabitatCave1[] =
+{
+	SPECIES_NACLI,
+	SPECIES_NACLSTACK,
+	SPECIES_GARGANACL,
+	SPECIES_KLAWF,
+};
+
+const u16 gHackHabitatCave2[] =
+{
+	SPECIES_GLIMMET,
+	SPECIES_GLIMMORA,
+	SPECIES_DUDUNSPARCE,
+};
+
+const u16 gHackHabitatMountain1[] =
+{
+	SPECIES_URSALUNA,
+	SPECIES_FUECOCO,
+	SPECIES_CROCALOR,
+	SPECIES_SKELEDIRGE,
+};
+
+const u16 gHackHabitatMountain2[] =
+{
+	SPECIES_CHARCADET,
+	SPECIES_ARMAROUGE,
+	SPECIES_CERULEDGE,
+	SPECIES_CETODDLE,
+};
+
+const u16 gHackHabitatMountain3[] =
+{
+	SPECIES_CETITAN,
+	SPECIES_ANNIHILAPE,
+	SPECIES_ARCHALUDON,
+};
+
+const u16 gHackHabitatRoughTerrain1[] =
+{
+	SPECIES_TOEDSCOOL,
+	SPECIES_TOEDSCRUEL,
+	SPECIES_CYCLIZAR,
+	SPECIES_KINGAMBIT,
+};
+
+const u16 gHackHabitatRoughTerrain2[] =
+{
+	SPECIES_FRIGIBAX,
+	SPECIES_ARCTIBAX,
+	SPECIES_BAXCALIBUR,
+};
+
+const u16 gHackHabitatUrban1[] =
+{
+	SPECIES_PAWMI,
+	SPECIES_PAWMO,
+	SPECIES_PAWMOT,
+	SPECIES_TADBULB,
+};
+
+const u16 gHackHabitatUrban2[] =
+{
+	SPECIES_BELLIBOLT,
+	SPECIES_WATTREL,
+	SPECIES_KILOWATTREL,
+	SPECIES_MASCHIFF,
+};
+
+const u16 gHackHabitatUrban3[] =
+{
+	SPECIES_MABOSSTIFF,
+	SPECIES_SHROODLE,
+	SPECIES_GRAFAIAI,
+	SPECIES_FLITTLE,
+};
+
+const u16 gHackHabitatUrban4[] =
+{
+	SPECIES_ESPATHRA,
+	SPECIES_VAROOM,
+	SPECIES_REVAVROOM,
+	SPECIES_ORTHWORM,
+};
+
+const u16 gHackHabitatUrban5[] =
+{
+	SPECIES_GREAVARD,
+	SPECIES_HOUNDSTONE,
+	SPECIES_GIMMIGHOUL,
+	SPECIES_GHOLDENGO,
+};
+
+const u16 gHackHabitatUrban6[] =
+{
+	SPECIES_RINDORIS,
+	SPECIES_GIGAMINE,
+};
+
+const u16 gHackHabitatRare1[] =
+{
+	SPECIES_ENAMORUS,
+	SPECIES_GREAT_TUSK,
+	SPECIES_SCREAM_TAIL,
+	SPECIES_BRUTE_BONNET,
+};
+
+const u16 gHackHabitatRare2[] =
+{
+	SPECIES_FLUTTER_MANE,
+	SPECIES_SLITHER_WING,
+	SPECIES_SANDY_SHOCKS,
+	SPECIES_IRON_TREADS,
+};
+
+const u16 gHackHabitatRare3[] =
+{
+	SPECIES_IRON_BUNDLE,
+	SPECIES_IRON_HANDS,
+	SPECIES_IRON_JUGULIS,
+	SPECIES_IRON_MOTH,
+};
+
+const u16 gHackHabitatRare4[] =
+{
+	SPECIES_IRON_THORNS,
+	SPECIES_WO_CHIEN,
+	SPECIES_CHIEN_PAO,
+	SPECIES_TING_LU,
+};
+
+const u16 gHackHabitatRare5[] =
+{
+	SPECIES_CHI_YU,
+	SPECIES_ROARING_MOON,
+	SPECIES_IRON_VALIANT,
+	SPECIES_KORAIDON,
+};
+
+const u16 gHackHabitatRare6[] =
+{
+	SPECIES_MIRAIDON,
+	SPECIES_WALKING_WAKE,
+	SPECIES_IRON_LEAVES,
+	SPECIES_OKIDOGI,
+};
+
+const u16 gHackHabitatRare7[] =
+{
+	SPECIES_MUNKIDORI,
+	SPECIES_FEZANDIPITI,
+	SPECIES_OGERPON,
+	SPECIES_GOUGING_FIRE,
+};
+
+const u16 gHackHabitatRare8[] =
+{
+	SPECIES_RAGING_BOLT,
+	SPECIES_IRON_BOULDER,
+	SPECIES_IRON_CROWN,
+	SPECIES_TERAPAGOS,
+};
+
+const u16 gHackHabitatRare9[] =
+{
+	SPECIES_PECHARUNT,
+	SPECIES_KAGENONAKANI,
+};
+/* HACK_HABITAT_EXTRA END */
+
 const struct HabitatPage gGrasslandPages[] =
 {
 	{gGrasslandPage1, ARRAY_COUNT(gGrasslandPage1)}, 
@@ -2658,6 +2934,10 @@ const struct HabitatPage gGrasslandPages[] =
 	{gGrasslandPage55, ARRAY_COUNT(gGrasslandPage55)}, 
 	{gGrasslandPage56, ARRAY_COUNT(gGrasslandPage56)}, 
 	{gGrasslandPage57, ARRAY_COUNT(gGrasslandPage57)}, 
+	{gHackHabitatGrassland1, ARRAY_COUNT(gHackHabitatGrassland1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatGrassland2, ARRAY_COUNT(gHackHabitatGrassland2)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatGrassland3, ARRAY_COUNT(gHackHabitatGrassland3)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatGrassland4, ARRAY_COUNT(gHackHabitatGrassland4)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gForestPages[] =
@@ -2732,6 +3012,12 @@ const struct HabitatPage gForestPages[] =
 	{gForestPage63, ARRAY_COUNT(gForestPage63)},
 	{gForestPage64, ARRAY_COUNT(gForestPage64)},
 	{gForestPage65, ARRAY_COUNT(gForestPage65)},
+	{gHackHabitatForest1, ARRAY_COUNT(gHackHabitatForest1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatForest2, ARRAY_COUNT(gHackHabitatForest2)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatForest3, ARRAY_COUNT(gHackHabitatForest3)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatForest4, ARRAY_COUNT(gHackHabitatForest4)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatForest5, ARRAY_COUNT(gHackHabitatForest5)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatForest6, ARRAY_COUNT(gHackHabitatForest6)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gWatersEdgePages[] =
@@ -2774,6 +3060,8 @@ const struct HabitatPage gWatersEdgePages[] =
 	{gWatersEdgePage36, ARRAY_COUNT(gWatersEdgePage36)},
 	{gWatersEdgePage37, ARRAY_COUNT(gWatersEdgePage37)}, 
 	{gWatersEdgePage38, ARRAY_COUNT(gWatersEdgePage38)}, 
+	{gHackHabitatWatersEdge1, ARRAY_COUNT(gHackHabitatWatersEdge1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatWatersEdge2, ARRAY_COUNT(gHackHabitatWatersEdge2)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gSeaPages[] =
@@ -2800,6 +3088,8 @@ const struct HabitatPage gSeaPages[] =
 	{gSeaPage20, ARRAY_COUNT(gSeaPage20)}, 
 	{gSeaPage21, ARRAY_COUNT(gSeaPage21)}, 
 	{gSeaPage22, ARRAY_COUNT(gSeaPage22)}, 
+	{gHackHabitatSea1, ARRAY_COUNT(gHackHabitatSea1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatSea2, ARRAY_COUNT(gHackHabitatSea2)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gCavePages[] =
@@ -2839,6 +3129,8 @@ const struct HabitatPage gCavePages[] =
 	{gCavePage33, ARRAY_COUNT(gCavePage33)}, 
 	{gCavePage34, ARRAY_COUNT(gCavePage34)}, 
 	{gCavePage35, ARRAY_COUNT(gCavePage35)}, 
+	{gHackHabitatCave1, ARRAY_COUNT(gHackHabitatCave1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatCave2, ARRAY_COUNT(gHackHabitatCave2)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gMountainPages[] =
@@ -2886,6 +3178,9 @@ const struct HabitatPage gMountainPages[] =
 	{gMountainPage41, ARRAY_COUNT(gMountainPage41)},
 	{gMountainPage42, ARRAY_COUNT(gMountainPage42)},
 	{gMountainPage43, ARRAY_COUNT(gMountainPage43)},
+	{gHackHabitatMountain1, ARRAY_COUNT(gHackHabitatMountain1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatMountain2, ARRAY_COUNT(gHackHabitatMountain2)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatMountain3, ARRAY_COUNT(gHackHabitatMountain3)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gRoughTerrainPages[] =
@@ -2918,6 +3213,8 @@ const struct HabitatPage gRoughTerrainPages[] =
 	{gRoughTerrainPage26, ARRAY_COUNT(gRoughTerrainPage26)}, 
 	{gRoughTerrainPage27, ARRAY_COUNT(gRoughTerrainPage27)}, 
 	{gRoughTerrainPage28, ARRAY_COUNT(gRoughTerrainPage28)}, 
+	{gHackHabitatRoughTerrain1, ARRAY_COUNT(gHackHabitatRoughTerrain1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRoughTerrain2, ARRAY_COUNT(gHackHabitatRoughTerrain2)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gUrbanPages[] =
@@ -2959,6 +3256,12 @@ const struct HabitatPage gUrbanPages[] =
 	{gUrbanPage35, ARRAY_COUNT(gUrbanPage35)}, 
 	{gUrbanPage36, ARRAY_COUNT(gUrbanPage36)},
 	{gUrbanPage37, ARRAY_COUNT(gUrbanPage37)}, 
+	{gHackHabitatUrban1, ARRAY_COUNT(gHackHabitatUrban1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatUrban2, ARRAY_COUNT(gHackHabitatUrban2)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatUrban3, ARRAY_COUNT(gHackHabitatUrban3)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatUrban4, ARRAY_COUNT(gHackHabitatUrban4)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatUrban5, ARRAY_COUNT(gHackHabitatUrban5)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatUrban6, ARRAY_COUNT(gHackHabitatUrban6)}, // HACK_HABITAT_EXTRA
 };
 
 const struct HabitatPage gRarePages[] =
@@ -3000,6 +3303,15 @@ const struct HabitatPage gRarePages[] =
 	{gRarePage35, ARRAY_COUNT(gRarePage35)},
 	{gRarePage36, ARRAY_COUNT(gRarePage36)},
 	{gRarePage37, ARRAY_COUNT(gRarePage37)},
+	{gHackHabitatRare1, ARRAY_COUNT(gHackHabitatRare1)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare2, ARRAY_COUNT(gHackHabitatRare2)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare3, ARRAY_COUNT(gHackHabitatRare3)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare4, ARRAY_COUNT(gHackHabitatRare4)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare5, ARRAY_COUNT(gHackHabitatRare5)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare6, ARRAY_COUNT(gHackHabitatRare6)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare7, ARRAY_COUNT(gHackHabitatRare7)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare8, ARRAY_COUNT(gHackHabitatRare8)}, // HACK_HABITAT_EXTRA
+	{gHackHabitatRare9, ARRAY_COUNT(gHackHabitatRare9)}, // HACK_HABITAT_EXTRA
 };
 
 const struct Habitat gHabitatPtrsTable[9] =

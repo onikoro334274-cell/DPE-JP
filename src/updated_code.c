@@ -170,10 +170,26 @@ const u8* TryLoadAlternateDexEntry(u16 species)
 	return 0;
 }
 
+bool8 HackSdBridge_LoadPic(void *dest, u16 species, u32 personality, bool8 isFrontPic); //SuperCard SD の試しの絵（src/hack_sd_bridge.c・2026-10-07）
+#ifndef HACK_NO_MOEMON
+//Moémon（#55・2026-10-08・src/hack_moemon.c）
+bool8 HackMoemon_LoadPic(void *dest, u16 species, u32 personality, bool8 isFrontPic);
+const u32 *HackMoemon_GetPal(u16 species, u32 personality, bool8 shiny);
+const void *HackMoemon_GetPalStruct(u16 species, u32 personality, bool8 shiny);
+u16 HackMoemon_IconSpecies(u16 species, u32 personality);
+#endif
+
 void LoadSpecialPokePic(const struct CompressedSpriteSheet* src, void* dest, u16 species, u32 personality, bool8 isFrontPic)
 {
 	u16 oldSpecies = species;
 	const struct CompressedSpriteSheet* table = isFrontPic ? gMonFrontPicTable : gMonBackPicTable;
+
+	if (HackSdBridge_LoadPic(dest, species, personality, isFrontPic))
+		return;
+	#ifndef HACK_NO_MOEMON
+	if (HackMoemon_LoadPic(dest, species, personality, isFrontPic))
+		return;
+	#endif
 
 	species = TryGetFemaleGenderedSpecies(species, personality);
 	if (species != oldSpecies) //Updated sprite
@@ -202,17 +218,28 @@ void LoadSpecialPokePic(const struct CompressedSpriteSheet* src, void* dest, u16
 	DrawSpindaSpots(species, personality, dest, isFrontPic);
 }
 
+//[hack] patches/0259 #70: 色違いは CFRU の IsShinyOtIdPersonality（08043AE4 を src/hack_mon_id.c に置き換えた＝ポケモン自身の表 ID・裏 ID）に聞く
+#define HackDpe_IsShiny(otId, personality) (((bool8 (*)(u32, u32)) 0x08043AE5)((otId), (personality)))
+
 const u32* GetFrontSpritePalFromSpeciesAndPersonality(u16 species, u32 otId, u32 personality)
 {
 	u32 shinyValue;
+
+	#ifndef HACK_NO_MOEMON
+	{
+		const u32 *moe = HackMoemon_GetPal(species, personality, HackDpe_IsShiny(otId, personality));
+		if (moe != 0)
+			return moe;
+	}
+	#endif
 	
 	species = TryGetFemaleGenderedSpecies(species, personality);
 	
 	if (species > NUM_SPECIES)
 		return (u32*) gMonPaletteTable[0].data;
 
-	shinyValue = HIHALF(otId) ^ LOHALF(otId) ^ HIHALF(personality) ^ LOHALF(personality);
-	if (shinyValue < 8)
+	shinyValue = HackDpe_IsShiny(otId, personality);
+	if (shinyValue)
 		return (u32*) gMonShinyPaletteTable[species].data;
 	else
 		return (u32*) gMonPaletteTable[species].data;
@@ -221,10 +248,18 @@ const u32* GetFrontSpritePalFromSpeciesAndPersonality(u16 species, u32 otId, u32
 const struct CompressedSpritePalette* GetMonSpritePalStructFromOtIdPersonality(u16 species, u32 otId , u32 personality)
 {
 	u32 shinyValue;
+
+	#ifndef HACK_NO_MOEMON
+	{
+		const void *moe = HackMoemon_GetPalStruct(species, personality, HackDpe_IsShiny(otId, personality));
+		if (moe != 0)
+			return moe;
+	}
+	#endif
 	species = TryGetFemaleGenderedSpecies(species, personality);
 
-	shinyValue = HIHALF(otId) ^ LOHALF(otId) ^ HIHALF(personality) ^ LOHALF(personality);
-	if (shinyValue < 8)
+	shinyValue = HackDpe_IsShiny(otId, personality);
+	if (shinyValue)
 		return &gMonShinyPaletteTable[species];
 	else
 		return &gMonPaletteTable[species];
@@ -264,6 +299,14 @@ u16 TryGetFemaleGenderedSpecies(u16 species, u32 personality)
 u16 GetIconSpecies(u16 species, u32 personality)
 {
 	u16 result;
+
+	#ifndef HACK_NO_MOEMON
+	{
+		u16 moe = HackMoemon_IconSpecies(species, personality);   //萌えもんのアイコン（2026-10-08・src/hack_moemon.c）
+		if (moe != 0)
+			return moe;
+	}
+	#endif
 
 	if (species == SPECIES_UNOWN)
 	{

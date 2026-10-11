@@ -19,6 +19,8 @@ GetIconSpecies 8096988 2
 EvolutionSceneHook1 80CF068 1
 EvolutionSceneHook2 80CF0E0 2
 EvolutionSceneHook3 80CF318 2
+TradeEvolutionLoadGraphicsHook 80CF580 1
+TradeEvolutionSceneHook 80CF714 1
 PokedexMemoryAllocationHook 8103370 0
 LoadPokedexViews 81042C4 1
 DisplayRegionalDexNumHook 8105822 1
@@ -29,3 +31,4 @@ NationalPokeDexPrintFix 8103B0C 1
 DexScreen_PrintNum3LeadingZeroes 0810563C 6
 DexScreen_PrintNum3RightAlign 081056D8 6
 DrawTextEntry 0809F808 0
+HackMoemonYDeltaHook 8073EE4 1
