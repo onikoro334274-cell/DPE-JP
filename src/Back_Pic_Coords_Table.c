@@ -3533,6 +3533,11 @@ const struct MonCoords gMonBackPicCoords[NUM_SPECIES] =
 		.size = 0x0,
 		.y_offset = 0xa,
 	},
+	[SPECIES_SHADOW_WARRIOR] =
+	{
+		.size = 0x0,
+		.y_offset = 0x0,
+	},
 	[SPECIES_BURMY_SANDY] =
 	{
 		.size = 0x0,
@@ -5178,10 +5183,20 @@ const struct MonCoords gMonBackPicCoords[NUM_SPECIES] =
 		.size = 0x0,
 		.y_offset = 0x8,
 	},
+	[SPECIES_EXEGGCUTE_A] =
+	{
+		.size = 0x65,
+		.y_offset = 0x12,
+	},
 	[SPECIES_EXEGGUTOR_A] =
 	{
 		.size = 0x0,
 		.y_offset = 0x0,
+	},
+	[SPECIES_CUBONE_A] =
+	{
+		.size = 0x76,
+		.y_offset = 0xa,
 	},
 	[SPECIES_MAROWAK_A] =
 	{
@@ -6078,6 +6093,11 @@ const struct MonCoords gMonBackPicCoords[NUM_SPECIES] =
 		.size = 0x0,
 		.y_offset = 0x8,
 	},
+	[SPECIES_KOFFING_G] =
+	{
+		.size = 0x66,
+		.y_offset = 0x3,
+	},
 	[SPECIES_WEEZING_G] =
 	{
 		.size = 0x0,
@@ -6122,6 +6142,11 @@ const struct MonCoords gMonBackPicCoords[NUM_SPECIES] =
 	{
 		.size = 0x0,
 		.y_offset = 0xd,
+	},
+	[SPECIES_MIME_JR_G] =
+	{
+		.size = 0x0,
+		.y_offset = 0x1,
 	},
 	[SPECIES_DARUMAKA_G] =
 	{
